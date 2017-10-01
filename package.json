@@ -1,0 +1,102 @@
+{
+  "_args": [
+    [
+      {
+        "raw": "shinobi",
+        "scope": null,
+        "escapedName": "shinobi",
+        "name": "shinobi",
+        "rawSpec": "",
+        "spec": "latest",
+        "type": "tag"
+      },
+      "/Users/waynewong/OpenCVDEV/Shinobi"
+    ]
+  ],
+  "_from": "shinobi@latest",
+  "_id": "shinobi@1.0.32",
+  "_inCache": true,
+  "_location": "/shinobi",
+  "_nodeVersion": "6.10.2",
+  "_npmOperationalInternal": {
+    "host": "s3://npm-registry-packages",
+    "tmp": "tmp/shinobi-1.0.32.tgz_1504676998455_0.0018140985630452633"
+  },
+  "_npmUser": {
+    "name": "moeiscool",
+    "email": "npmjs@m03.ca"
+  },
+  "_npmVersion": "3.10.10",
+  "_phantomChildren": {},
+  "_requested": {
+    "raw": "shinobi",
+    "scope": null,
+    "escapedName": "shinobi",
+    "name": "shinobi",
+    "rawSpec": "",
+    "spec": "latest",
+    "type": "tag"
+  },
+  "_requiredBy": [
+    "#USER"
+  ],
+  "_resolved": "https://registry.npmjs.org/shinobi/-/shinobi-1.0.32.tgz",
+  "_shasum": "308e013cb102162fc419153bddee7a578fa045b1",
+  "_shrinkwrap": null,
+  "_spec": "shinobi",
+  "_where": "/Users/waynewong/OpenCVDEV/Shinobi",
+  "author": {
+    "name": "Moe Alam"
+  },
+  "bugs": {
+    "url": "https://github.com/ShinobiCCTV/Shinobi/issues"
+  },
+  "dependencies": {
+    "body-parser": "^1.15.2",
+    "circular-json": "0.3.1",
+    "connection-tester": "^0.1.1",
+    "crypto": "^0.0.3",
+    "ejs": "^2.5.5",
+    "express": "^4.14.0",
+    "jsonfile": "^3.0.1",
+    "ldapauth-fork": "^4.0.2",
+    "moment": "^2.17.0",
+    "mysql": "^2.12.0",
+    "nodemailer": "^4.0.1",
+    "onvif": "^0.5.3",
+    "path": "^0.12.7",
+    "request": "^2.79.0",
+    "socket.io": "^1.7.1",
+    "socket.io-client": "^1.7.2",
+    "webdav": "^0.3.1"
+  },
+  "description": "CCTV and NVR for Node.js",
+  "devDependencies": {},
+  "directories": {},
+  "dist": {
+    "shasum": "308e013cb102162fc419153bddee7a578fa045b1",
+    "tarball": "https://registry.npmjs.org/shinobi/-/shinobi-1.0.32.tgz"
+  },
+  "gitHead": "366018e4fa23048e0e073530bce335cc080bea7e",
+  "homepage": "https://github.com/moeiscool/Shinobi#readme",
+  "license": "GPLv3",
+  "main": "camera.js",
+  "maintainers": [
+    {
+      "name": "moeiscool",
+      "email": "npmjs@m03.ca"
+    }
+  ],
+  "name": "shinobi",
+  "optionalDependencies": {},
+  "readme": "ERROR: No README data found!",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/moeiscool/Shinobi.git"
+  },
+  "scripts": {
+    "start": "chmod +x INSTALL/start.sh && INSTALL/start.sh",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "version": "1.0.32"
+}
