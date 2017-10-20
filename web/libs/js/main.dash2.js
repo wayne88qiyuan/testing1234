@@ -7,6 +7,7 @@ window.chartColors = {
     purple: 'rgb(153, 102, 255)',
     grey: 'rgb(201, 203, 207)'
 };
+var apiUrl = "http://localhost:8000/";
 $user.details=JSON.parse($user.details)
 $.ccio={fr:$('#files_recent'),mon:{}};
 if(!$user.details.lang||$user.details.lang==''){
@@ -43,6 +44,53 @@ switch($user.details.lang){
             user=$user
         }
         switch(x){
+            case'signal':
+                $.ajax({
+                    type: "POST",
+                    url: apiUrl+'face_detection/detect/',
+                    headers: {'Content-Type':'application/x-www-form-urlencoded'},
+                    data: {url:"data:image/jpeg;base64,"+d.frame,type:'check',urlType:'normal'},
+                    success: function (data) {
+                        if (data.num_faces > 0) {
+                            $("." +  d.id + " span.total").html(parseInt($("." +  d.id + " span.total").html())+1);
+                            $.ajax({
+                                type: "POST",
+                                url: apiUrl+'face_detection/detect/',
+                                headers: {'Content-Type':'application/x-www-form-urlencoded'},
+                                data: {url:"data:image/jpeg;base64,"+d.frame,type:'detect',urlType:'normal'},
+                                success: function (data2) {
+                                    var name = (data2.foundProfile && data2.foundProfile.name) ? data2.foundProfile.name : "";
+                                    var imageUrl = data2.imageUrl;
+                                    var foundId = ($("div.toolbarChild.pk_" + data2.foundId).length > 0) ? true : false;
+                                    if ($("div." + d.id + " div.toolbarChild").length > 0) {
+                                        if (!foundId) {
+                                            $("div." + d.id + " div.toolbar").append('<div class="toolbarChild pk_' + data2.foundId + '"><img src="' + imageUrl + '"/><br/><input class="updateName" data-id="' + data2.foundId + '" type="text" value="' + name + '"/></div>');
+                                        } else {
+                                            $("div.toolbarChild.pk_" + data2.foundId + " input.updateName").val(name);
+                                        }
+                                    } else {
+                                        if (!foundId) {
+                                            $("div." + d.id + " div.toolbar").html('<div class="toolbarChild pk_' + data2.foundId + '"><img src="' + imageUrl + '"/><br/><input class="updateName" data-id="' + data2.foundId + '" type="text" value="' + name + '"/></div>');
+                                        } else {
+                                            $("div.toolbarChild.pk_" + data2.foundId + " input.updateName").val(name);
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    }
+                });
+                d.mon=$.ccio.mon[d.ke+d.id+user.auth_token];
+                d.e=$('#monitor_live_'+d.id+user.auth_token+' .signal').addClass('btn-success').removeClass('btn-danger');
+                d.signal=parseFloat(JSON.parse(d.mon.details).signal_check);
+                if(!d.signal||d.signal==NaN){
+                    d.signal=10;
+                }
+                d.signal=d.signal*1000*60;
+                clearTimeout($.ccio.mon[d.ke+d.id+user.auth_token]._signal);
+                $.ccio.mon[d.ke+d.id+user.auth_token]._signal=setTimeout(function(){d.e.addClass('btn-danger').removeClass('btn-success');},d.signal);
+                
+            break;
             case'location':
                 var url
                 if(d&&d.info&&d.info.URL){
@@ -311,7 +359,8 @@ switch($user.details.lang){
                 $('#saved_filters').html(k.tmp)
             break;
             case'id':
-                $('.usermail').html(d.mail)
+//                $('.usermail').html(d.mail)
+                $('.usermail').html("CCTV")
                 k.d=d.details
                 try{user.mon_groups=JSON.parse(k.d.mon_groups);}catch(er){}
                 if(!user.mon_groups)user.mon_groups={};
@@ -358,11 +407,6 @@ switch($user.details.lang){
                 }else{
                     $('[data-ke="'+d.ke+'"][data-mid="'+d.mid+'"][data-file="'+d.filename+'"][auth="'+user.auth_token+'"]').attr('mid',d.mid).attr('ke',d.ke).attr('status',d.status).attr('file',d.filename).attr('auth',user.auth_token);
                 }
-            break;
-            case'signal':
-                d.mon=$.ccio.mon[d.ke+d.id+user.auth_token];d.e=$('#monitor_live_'+d.id+user.auth_token+' .signal').addClass('btn-success').removeClass('btn-danger');d.signal=parseFloat(JSON.parse(d.mon.details).signal_check);
-                if(!d.signal||d.signal==NaN){d.signal=10;};d.signal=d.signal*1000*60;
-                clearTimeout($.ccio.mon[d.ke+d.id+user.auth_token]._signal);$.ccio.mon[d.ke+d.id+user.auth_token]._signal=setTimeout(function(){d.e.addClass('btn-danger').removeClass('btn-success');},d.signal)
             break;
             case'signal-check':
                 try{
@@ -564,31 +608,76 @@ switch($user.details.lang){
             case 2://monitor stream
                 try{k.d=JSON.parse(d.details);}catch(er){k.d=d.details;}
                 k.mode=$.ccio.init('humanReadMode',d.mode)
-                tmp+='<div auth="'+user.auth_token+'" mid="'+d.mid+'" ke="'+d.ke+'" id="monitor_live_'+d.mid+user.auth_token+'" mode="'+k.mode+'" class="monitor_item glM'+d.mid+user.auth_token+' mdl-grid col-md-6">';
-                tmp+='<div class="mdl-card mdl-cell mdl-cell--8-col">';
-                tmp+='<div class="stream-block no-padding mdl-card__media mdl-color-text--grey-50">';
-                tmp+='<div class="stream-objects"></div>';
-                tmp+='<div class="stream-hud"><div class="lamp" title="'+k.mode+'"><i class="fa fa-eercast"></i></div><div class="controls"><span title="<%-cleanLang(lang['Currently viewing'])%>" class="label label-default"><span class="viewers"></span></span> <a class="btn-xs btn-danger btn" monitor="mode" mode="record"><i class="fa fa-circle"></i> <%-cleanLang(lang['Start Recording'])%></a> <a class="btn-xs btn-primary btn" monitor="mode" mode="start"><i class="fa fa-eye"></i> <%-cleanLang(lang['Set to Watch Only'])%></a></div><div class="bottom-text"><span class="detector-fade">Objects Detected : <span class="stream-detected-count"></span></span></div></div>';
+                tmp+='<div class="col-md-12">';
+                    tmp+='<span>CCTV: ' + d.name + '</span>';
+                    tmp+='<div auth="'+user.auth_token+'" mid="'+d.mid+'" ke="'+d.ke+'" id="monitor_live_'+d.mid+user.auth_token+'" mode="'+k.mode+'" class="monitor_item glM'+d.mid+user.auth_token+' mdl-grid col-md-6">';
+
+                        tmp+='<div class="mdl-card mdl-cell mdl-cell--8-col">';
+                            tmp+='<div class="stream-block no-padding mdl-card__media mdl-color-text--grey-50">';
+
+                                tmp+='<div class="stream-objects"></div>';
+
+                                tmp+='<div class="stream-hud">';
+                                    tmp+='<div class="lamp" title="'+k.mode+'"><i class="fa fa-eercast"></i></div>';
+                                        tmp+='<div class="controls">';
+                                        tmp+='<span title="<%-cleanLang(lang['Currently viewing'])%>" class="label label-default"><span class="viewers"></span></span> ';
+                                        tmp+='<a class="btn-xs btn-danger btn" monitor="mode" mode="record"><i class="fa fa-circle"></i> <%-cleanLang(lang['Start Recording'])%></a>';
+                                        tmp+='<a class="btn-xs btn-primary btn" monitor="mode" mode="start"><i class="fa fa-eye"></i> <%-cleanLang(lang['Set to Watch Only'])%></a>';
+                                        tmp+='</div>';
+
+                                        tmp+='<div class="bottom-text"><span class="detector-fade">Objects Detected : <span class="stream-detected-count"></span></span></div>';
+                                    tmp+='</div>';
+                                tmp+='</div>';
+
+                                tmp+='<div class="mdl-card__supporting-text text-center">';
+                                    tmp+='<div class="indifference detector-fade">';
+                                        tmp+='<div class="progress">';
+                                            tmp+='<div class="progress-bar progress-bar-danger" role="progressbar"><span></span></div>';
+                                        tmp+='</div>';
+                                    tmp+='</div>';
+                                tmp+='<div class="monitor_details">';
+                                    tmp+='<div><span class="monitor_name">'+d.name+'</span><span class="monitor_not_record_copy">, <%-cleanLang(lang['Recording FPS'])%> : <span class="monitor_fps">'+d.fps+'</span></span></div>';
+                                tmp+='</div>';
+
+                                tmp+='<div class="btn-group">';
+                                    tmp+='<a title="<%-cleanLang(lang.Snapshot)%>" monitor="snapshot" class="btn btn-primary"><i class="fa fa-camera"></i></a> ';
+                                    tmp+='<a title="<%-cleanLang(lang['Show Logs'])%>" class_toggle="show_logs" data-target=".monitor_item[mid=\''+d.mid+'\'][ke=\''+d.ke+'\']" class="btn btn-warning"><i class="fa fa-exclamation-triangle"></i></a> ';
+                                    tmp+='<a title="<%-cleanLang(lang.Control)%>" monitor="control_toggle" class="btn btn-default"><i class="fa fa-arrows"></i></a> ';
+                                    tmp+='<a title="<%-cleanLang(lang['Status Indicator'])%>" class="btn btn-danger signal" monitor="watch_on"><i class="fa fa-plug"></i></a> ';
+                                    tmp+='<a title="<%-cleanLang(lang.Pop)%>" monitor="pop" class="btn btn-default"><i class="fa fa-external-link"></i></a> ';
+                                    tmp+='<a title="<%-cleanLang(lang.Calendar)%>" monitor="calendar" class="btn btn-default"><i class="fa fa-calendar"></i></a> ';
+                                    tmp+='<a title="<%-cleanLang(lang['Power Viewer'])%>" class="btn btn-default" monitor="powerview"><i class="fa fa-map-marker"></i></a> ';
+                                    tmp+='<a title="<%-cleanLang(lang['Time-lapse'])%>" class="btn btn-default" monitor="timelapse"><i class="fa fa-angle-double-right"></i></a> ';
+                                    tmp+='<a title="<%-cleanLang(lang['Videos List'])%>" monitor="videos_table" class="btn btn-default"><i class="fa fa-film"></i></a> ';
+                                    tmp+='<a title="<%-cleanLang(lang['Monitor Settings'])%>" class="btn btn-default permission_monitor_edit" monitor="edit"><i class="fa fa-wrench"></i></a> ';
+                                    tmp+='<a title="<%-cleanLang(lang.Fullscreen)%>" monitor="fullscreen" class="btn btn-default"><i class="fa fa-arrows-alt"></i></a> ';
+                                    tmp+='<a title="<%-cleanLang(lang.Close)%> Stream" monitor="watch_off" class="btn btn-danger"><i class="fa fa-times"></i></a>';
+                                tmp+='</div>';
+                            tmp+='</div>';
+                        tmp+='</div>';
+
+                        tmp+='<div class="mdl-card mdl-cell mdl-cell--8-col mdl-cell--4-col-desktop">';
+                            tmp+='<div class="mdl-card__media">';
+                                tmp+='<div class="side-menu logs scrollable"></div>';
+                                tmp+='<div class="side-menu videos_monitor_list glM'+d.mid+user.auth_token+' scrollable"><ul></ul></div>';
+                            tmp+='</div>';
+                            tmp+='<div class="mdl-card__supporting-text meta meta--fill mdl-color-text--grey-600">';
+                                tmp+='<div>';
+                                    tmp+='<span class="monitor_name">'+d.name+'</span><span class="monitor_not_record_copy"><%-cleanLang(lang['Recording FPS'])%> : <b class="monitor_fps">'+d.fps+'</b></span>';
+                                    tmp+='<b class="monitor_mode">'+k.mode+'</b>';
+                                tmp+='</div>';
+                            tmp+='</div>';
+                        tmp+='</div>';
+                    tmp+='</div>';
+                    
+                    tmp+='<div class="detectedFacesDiv col-md-6 ' + d.mid + '">';
+                        tmp+='<span>Live faces found:<span class="total">0</span> </span>';
+                        tmp+='<div class="toolbar"></div>';
+//                        tmp+='<div class="toolbar"><div class="toolbarChild"><img src="http://localhost/image/User.1.Unknown_1.jpg"/><br/><input class="updateName" data-id="2" type="text" value="1251234134tefwdsw"/></div></div>';
+                        tmp+='';
+                    tmp+='</div>';
                 tmp+='</div>';
-                tmp+='<div class="mdl-card__supporting-text text-center">';
-                tmp+='<div class="indifference detector-fade"><div class="progress"><div class="progress-bar progress-bar-danger" role="progressbar"><span></span></div></div></div>';
-                tmp+='<div class="monitor_details">';
-                tmp+='<div><span class="monitor_name">'+d.name+'</span><span class="monitor_not_record_copy">, <%-cleanLang(lang['Recording FPS'])%> : <span class="monitor_fps">'+d.fps+'</span></span></div>';
-                tmp+='</div>';
-                tmp+='<div class="btn-group"><a title="<%-cleanLang(lang.Snapshot)%>" monitor="snapshot" class="btn btn-primary"><i class="fa fa-camera"></i></a> <a title="<%-cleanLang(lang['Show Logs'])%>" class_toggle="show_logs" data-target=".monitor_item[mid=\''+d.mid+'\'][ke=\''+d.ke+'\']" class="btn btn-warning"><i class="fa fa-exclamation-triangle"></i></a> <a title="<%-cleanLang(lang.Control)%>" monitor="control_toggle" class="btn btn-default"><i class="fa fa-arrows"></i></a> <a title="<%-cleanLang(lang['Status Indicator'])%>" class="btn btn-danger signal" monitor="watch_on"><i class="fa fa-plug"></i></a> <a title="<%-cleanLang(lang.Pop)%>" monitor="pop" class="btn btn-default"><i class="fa fa-external-link"></i></a> <a title="<%-cleanLang(lang.Calendar)%>" monitor="calendar" class="btn btn-default"><i class="fa fa-calendar"></i></a> <a title="<%-cleanLang(lang['Power Viewer'])%>" class="btn btn-default" monitor="powerview"><i class="fa fa-map-marker"></i></a> <a title="<%-cleanLang(lang['Time-lapse'])%>" class="btn btn-default" monitor="timelapse"><i class="fa fa-angle-double-right"></i></a> <a title="<%-cleanLang(lang['Videos List'])%>" monitor="videos_table" class="btn btn-default"><i class="fa fa-film"></i></a> <a title="<%-cleanLang(lang['Monitor Settings'])%>" class="btn btn-default permission_monitor_edit" monitor="edit"><i class="fa fa-wrench"></i></a> <a title="<%-cleanLang(lang.Fullscreen)%>" monitor="fullscreen" class="btn btn-default"><i class="fa fa-arrows-alt"></i></a> <a title="<%-cleanLang(lang.Close)%> Stream" monitor="watch_off" class="btn btn-danger"><i class="fa fa-times"></i></a></div>';
-                tmp+='</div>';
-                tmp+='</div>';
-                tmp+='<div class="mdl-card mdl-cell mdl-cell--8-col mdl-cell--4-col-desktop">';
-                tmp+='<div class="mdl-card__media">';
-                tmp+='<div class="side-menu logs scrollable"></div>';
-                tmp+='<div class="side-menu videos_monitor_list glM'+d.mid+user.auth_token+' scrollable"><ul></ul></div>';
-                tmp+='</div>';
-                tmp+='<div class="mdl-card__supporting-text meta meta--fill mdl-color-text--grey-600">';
-                tmp+='<div><span class="monitor_name">'+d.name+'</span><span class="monitor_not_record_copy"><%-cleanLang(lang['Recording FPS'])%> : <b class="monitor_fps">'+d.fps+'</b></span>';
-                tmp+='<b class="monitor_mode">'+k.mode+'</b>';
-                tmp+='</div>';
-                tmp+='</div>';
-                tmp+='</div>';
+                console.log(tmp);
             break;
             case 3://api key row
                 tmp+='<tr api_key="'+d.code+'"><td class="code">'+d.code+'</td><td class="ip">'+d.ip+'</td><td class="time">'+d.time+'</td><td class="text-right"><a class="delete btn btn-xs btn-danger">&nbsp;<i class="fa fa-trash"></i>&nbsp;</a></td></tr>';
@@ -902,7 +991,7 @@ $.ccio.globalWebsocket=(d,user)=>{
                     $.ccio.tm(1,v,null,user)
                     if(d.o[v.ke]&&d.o[v.ke][v.mid]===1){
                         $.ccio.cx({f:'monitor',ff:'watch_on',id:v.mid},user)
-                    }
+                }
                 }
                 if(f.mid){
                     g(null,f)
@@ -3528,6 +3617,22 @@ $('body')
 })
 .on('dblclick','.stream-hud',function(){
     $(this).parents('[mid]').find('[monitor="fullscreen"]').click();
+})
+.on('blur', 'input.updateName', function() {
+    var id = $(this).attr("data-id");
+    var val = $(this).val();
+    
+    $.ajax({
+        type: "POST",
+        url: apiUrl+'face_detection/update/',
+        headers: {'Content-Type':'application/x-www-form-urlencoded'},
+        data: {name:val,id :id},
+        success: function (data) {
+            if (data.success) {
+                alert("Success update name");
+            }
+        }
+    });
 }); 
     //check switch UI
     e.o=$.ccio.op().switches;
