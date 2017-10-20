@@ -1,4 +1,10 @@
 $(document).ready(function() {
+        $( "input.updateName" ).blur(function() {
+                var id = $(this).attr("data-id");
+                var val = $(this).val();
+                console.log(id, val);
+        });
+    
     var monthNames = [ "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" ]; 
     var dayNames= ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
 

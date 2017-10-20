@@ -1,5 +1,5 @@
 <!--Help Window-->
-<div class="modal fade" id="help_window" tabindex="-1" role="dialog" aria-labelledby="help_windowLabel" aria-hidden="true">
+<!--<div class="modal fade" id="help_window" tabindex="-1" role="dialog" aria-labelledby="help_windowLabel" aria-hidden="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
@@ -25,20 +25,20 @@
       </div>
     </div>
   </div>
-</div>
+</div>-->
 <script>
 $(document).ready(function(){
-    $.help={hide:$('#help_window .hide_donate'),e:$('#help_window')}
-    if($.ccio.op().hide_donate!==1){
-        setTimeout(function(){
-            $.help.e.modal('show')
-        },1000*60*5)
-        $.help.hide.click(function(){
-            $.ccio.op('hide_donate',1);
-            $.help.e.modal('hide');
-        })
-    }else{
-        $.help.hide.hide()
-    }
-})
+//    $.help={hide:$('#help_window .hide_donate'),e:$('#help_window')}
+//    if($.ccio.op().hide_donate!==1){
+//        setTimeout(function(){
+//            $.help.e.modal('show')
+        //},1000*60*5)
+//        $.help.hide.click(function(){
+//            $.ccio.op('hide_donate',1);
+//            $.help.e.modal('hide');
+        //});
+//    }else{
+//        $.help.hide.hide()
+    //}
+});
 </script>
